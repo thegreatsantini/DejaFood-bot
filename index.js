@@ -81,7 +81,7 @@ const memoryStorage = new MemoryStorage();
 const conversationState = new ConversationState(memoryStorage);
 const userState = new UserState(memoryStorage)
 // Create the main dialog.
-const myBot = new MyBot(conversationState, userState);
+const myBot = new MyBot(conversationState, userState, botConfig);
 // console.log('***', userState)
 // Catch-all for errors.
 
