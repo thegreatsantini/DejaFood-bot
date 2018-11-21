@@ -6,8 +6,7 @@ const restify = require('restify');
 
 // Import required bot services.
 // See https://aka.ms/bot-services to learn more about the different parts of a bot.
-const { BotFrameworkAdapter, MemoryStorage, ConversationState } = require('botbuilder');
-
+const { BotFrameworkAdapter, MemoryStorage, UserState, ConversationState } = require('botbuilder');
 // Import required bot configuration.
 const { BotConfiguration } = require('botframework-config');
 
@@ -17,7 +16,7 @@ const { MyBot } = require('./bot');
 // Read botFilePath and botFileSecret from .env file
 // Note: Ensure you have a .env file and include botFilePath and botFileSecret.
 const ENV_FILE = path.join(__dirname, '.env');
-const env = require('dotenv').config({path: ENV_FILE});
+const env = require('dotenv').config({ path: ENV_FILE });
 
 // bot endpoint name as defined in .bot file
 // See https://aka.ms/about-bot-file to learn more about .bot file its use and bot configuration .
@@ -80,11 +79,12 @@ const memoryStorage = new MemoryStorage();
 
 // Create conversation state with in-memory storage provider.
 const conversationState = new ConversationState(memoryStorage);
-
+const userState = new UserState(memoryStorage)
 // Create the main dialog.
-const myBot = new MyBot(conversationState);
-
+const myBot = new MyBot(conversationState, userState);
+// console.log('***', userState)
 // Catch-all for errors.
+
 adapter.onTurnError = async (context, error) => {
     // This check writes out errors to console log .vs. app insights.
     console.error(`\n [onTurnError]: ${error}`);
@@ -99,6 +99,7 @@ adapter.onTurnError = async (context, error) => {
 
 // Listen for incoming requests.
 server.post('/api/messages', (req, res) => {
+
     adapter.processActivity(req, res, async (context) => {
         // Route to main dialog.
         await myBot.onTurn(context);
