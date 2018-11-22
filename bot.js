@@ -4,13 +4,33 @@
 const { ActivityTypes, CardFactory } = require('botbuilder');
 const { LuisRecognizer } = require('botbuilder-ai');
 const LUIS_CONFIGURATION = 'Starter_Key';
+const { ChoicePrompt, DialogSet, DialogTurnStatus } = require('botbuilder-dialogs');
+const { UserProfile } = require('./dialogs/greeting/UserProfile');
+console.log(UserProfile)
+const { GreetingDialog } = require('./dialogs/greeting');
+// const { RecipeSearch } = require('./dialogs/recipeSearch')
 //dialog cards
 const IntroCard = require('./resources/IntroCard.json')
-// Turn counter property
-const TURN_COUNTER_PROPERTY = 'turnCounterProperty';
 const WELCOMED_USER = 'welcomedUserProperty';
-const USER_PROFILE = 'user'
-const TOPIC_STATE = 'topic';
+
+// State Accessor Properties
+const DIALOG_STATE_PROPERTY = 'dialogState';
+const USER_PROFILE_PROPERTY = 'userProfileProperty';
+
+// Greeting Dialog ID
+const GREETING_DIALOG = 'greetingDialog';
+const RECIPE_SEACH_DIALOG = 'greetingDialog';
+
+// Supported LUIS Intents.
+const SEARCH_RECIPE = 'searchRecipe'
+const GREETING_INTENT = 'Greeting';
+const CANCEL_INTENT = 'Cancel';
+const HELP_INTENT = 'Help';
+const NONE_INTENT = 'None';
+
+// Supported LUIS Entities, defined in ./dialogs/greeting/resources/greeting.lu
+const USER_NAME_ENTITIES = ['userName', 'userName_patternAny'];
+const USER_LOCATION_ENTITIES = ['userLocation', 'userLocation_patternAny'];
 
 class MyBot {
   /**
@@ -22,69 +42,90 @@ class MyBot {
     if (!userState) throw new Error('Missing parameter.  userState is required');
     if (!botConfig) throw new Error('Missing parameter.  botConfig is required');
 
-    // Creates a new state accessor property.
-    // See https://aka.ms/about-bot-state-accessors to learn more about the bot state and state accessors.
-    this.countProperty = conversationState.createProperty(TURN_COUNTER_PROPERTY);
-    this.welcomedUserProperty = userState.createProperty(WELCOMED_USER);
-    this.conversationState = conversationState;
-    this.topicState = this.conversationState.createProperty(TOPIC_STATE);
-    this.userState = userState;
-    this.userProfile = this.userState.createProperty(USER_PROFILE)
-
-    // A LUIS recognizer
+    // LUIS recognizer
     const luisConfig = botConfig.findServiceByNameOrId(LUIS_CONFIGURATION)
     if (!luisConfig || !luisConfig.appId) throw new Error('Missing LUIS configs')
     this.luisRecognizer = new LuisRecognizer({
       applicationId: luisConfig.appId,
       endpoint: luisConfig.getEndpoint(),
       endpointKey: luisConfig.authoringKey
-    
     })
+
+    // Creates a new state accessor property.
+    // See https://aka.ms/about-bot-state-accessors to learn more about the bot state and state accessors.
+
+
+    // Create the property accessors for user and conversation state
+    this.userProfileAccessor = userState.createProperty(USER_PROFILE_PROPERTY);
+    this.dialogState = conversationState.createProperty(DIALOG_STATE_PROPERTY);
+
+    // Create top-level dialog(s)
+    this.dialogs = new DialogSet(this.dialogState);
+    // Add the Greeting dialog to the set
+    this.dialogs.add(new GreetingDialog(GREETING_DIALOG, this.userProfileAccessor));
+    // this.dialogs.add(new RecipeSearch(GREETING_DIALOG, this.userProfileAccessor));
+    // this.dialogs.add(new ChoicePrompt(RECIPE_SEACH_DIALOG))
+
+    this.conversationState = conversationState;
+    this.userState = userState;
+
+
+    this.welcomedUserProperty = userState.createProperty(WELCOMED_USER);
   }
   /**
    *
    * @param {TurnContext} on turn context object.
    */
   async onTurn(turnContext) {
-
-
     // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
     if (turnContext.activity.type === ActivityTypes.Message) {
+      let dialogResult;
+
+      // Create a dialog context
+      const dc = await this.dialogs.createContext(turnContext);
+
       const results = await this.luisRecognizer.recognize(turnContext);
       const topIntent = LuisRecognizer.topIntent(results)
 
-      console.log('results.entities',results.entities)
-      console.log('results.intents',results.intents)
-      console.log('topIntent',topIntent)
-      console.log('*************************')
-      // Read UserState. If the 'DidBotWelcomedUser' does not exist (first time ever for a user)
-      // set the default to false.
-      const didBotWelcomedUser = await this.welcomedUserProperty.get(turnContext, false);
+      // I think this is necessary in case something gets paused for whatever reason
+      dialogResult = await dc.continueDialog();
 
-      let topicState = await this.topicState.get(turnContext, {
-        //Define the topic state object
-        prompt: "askName"
-      });
-      let userProfile = await this.userProfile.get(turnContext, {
-        // Define the user's profile object
-        "userName": "",
-        "telephoneNumber": ""
-      });
-
-      if (didBotWelcomedUser === false) {
-        // The channel should send the user name in the 'From' object
-        let userName = turnContext.activity.from.name;
-        await turnContext.sendActivity('You are seeing this message because this was your first message ever sent to this bot.');
-        await turnContext.sendActivity(`It is a good practice to welcome the user and provide personal greeting. For example, welcome ${userName}.`);
-
-        // Set the flag indicating the bot handled the user's first message.
-        await this.welcomedUserProperty.set(turnContext, true);
+      // If no active dialog or no active dialog has responded,
+      if (!dc.context.responded) {
+        console.log(topIntent)
+        // Switch on return results from any active dialog.
+        switch (dialogResult.status) {
+          // dc.continueDialog() returns DialogTurnStatus.empty if there are no active dialogs
+          case DialogTurnStatus.empty:
+            // Determine what we should do based on the top intent from LUIS.
+            switch (topIntent) {
+              case SEARCH_RECIPE:
+                await dc.beginDialog(GREETING_DIALOG);
+                break;
+              case GREETING_INTENT:
+                await dc.beginDialog(GREETING_DIALOG);
+                break;
+              case NONE_INTENT:
+              default:
+                // None or no intent identified, either way, let's provide some help
+                // to the user
+                await dc.context.sendActivity(`I didn't understand what you just said to me.`);
+                break;
+            }
+            break;
+          case DialogTurnStatus.waiting:
+            // The active dialog is waiting for a response from the user, so do nothing.
+            break;
+          case DialogTurnStatus.complete:
+            // All child dialogs have ended. so do nothing.
+            break;
+          default:
+            // Unrecognized status from child dialog. Cancel all dialogs.
+            await dc.cancelAllDialogs();
+            break;
+        }
       }
-      // increment and set turn counter.
-      let count = await this.countProperty.get(turnContext);
-      count = count === undefined ? 1 : ++count;
-      await turnContext.sendActivity(`${count}: I said "${turnContext.activity.text}"`);
-      await this.countProperty.set(turnContext, count);
+
     }
     else if (turnContext.activity.type === ActivityTypes.ConversationUpdate) {
       // Send greeting when users are added to the conversation.
@@ -118,6 +159,31 @@ class MyBot {
           });
         }
       }
+    }
+  }
+  /**
+     * Helper function to update user profile with entities returned by LUIS.
+     *
+     * @param {LuisResults} luisResults - LUIS recognizer results
+     * @param {DialogContext} dc - dialog context
+     */
+  async updateUserProfile(luisResult, context) {
+    console.log(luisResult.entities.personName)
+    // Do we have any entities?
+    if (Object.keys(luisResult.entities).length !== 1) {
+      // get userProfile object using the accessor
+      let userProfile = await this.userProfileAccessor.get(context);
+      if (userProfile === undefined) {
+        userProfile = new UserProfile();
+      }
+      // see if we have any user name entities
+      if (luisResult.entities.personName !== undefined) {
+        console.log('exists')
+        userProfile.name = luisResult.entities.personName[0]
+      }
+      // set the new values
+      await this.userProfileAccessor.set(context, userProfile);
+      console.log('current user', userProfile)
     }
   }
 }
