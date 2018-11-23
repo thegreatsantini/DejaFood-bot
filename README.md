@@ -1,7 +1,7 @@
 # RecipeBot
-Demonstrate the core capabilties of the Microsoft Bot Framework
+Demonstrate the core capabilities of the Microsoft Bot Framework
 
-This bot has been created using [Microsoft Bot Framework][10], it shows how to create a simple echo bot with state. The bot maintains a simple counter that increases with each message from the user. This bot example uses [`restify`][1].
+This bot has been created using [Microsoft Bot Framework][10]
 
 # To run the bot
 - Install modules and start the bot
@@ -23,47 +23,36 @@ This bot has been created using [Microsoft Bot Framework][10], it shows how to c
 - File -> Open Bot Configuration
 - Select `RecipeBot.bot` file
 
-# Bot state
-A key to good bot design is to track the context of a conversation, so that your bot remembers things like the answers to previous questions. Depending on what your bot is used for, you may even need to keep track of conversation state or store user related information for longer than the lifetime of one given conversation.
+# Bot Info
+    RecipeBot is a simple chat bot that users can interact with to search and save recipes based off input ingredients. 
 
-In this example, the bot's state is used to track number of messages.
+    LUIS is used to predict users intent during an input and based of that intent the user will be sent. 
+    Intents are preset.
+    * Greeting
+    * Search_Recipe
+    * Cancel
+    * Help
 
- A bot's state is information it remembers in order to respond appropriately to incoming messages. The Bot Builder SDK provides classes for [storing and retrieving state data][4] as an object associated with a user or a conversation.
+    If the intent is Greeting than the bot will guide them through prompts that will create a profile and search for a recipe. There are several checks through the waterfall dialog that will save user data and/or give prompts
 
-    - Conversation properties help your bot keep track of the current conversation the bot is having with the user. If your bot needs to complete a sequence of steps or switch between conversation topics, you can use conversation properties to manage steps in a sequence or track the current topic. Since conversation properties reflect the state of the current conversation, you typically clear them at the end of a session, when the bot receives an end of conversation activity.
+    Search_Recipe intent will initiate another waterfall dialog that will also check for user data, if there is no data than it will prompt the user to create a profile. If user already exists than it will immediately query the API with the entities that are collected using LUIS.
 
-    - User properties can be used for many purposes, such as determining where the user's prior conversation left off or simply greeting a returning user by name. If you store a user's preferences, you can use that information to customize the conversation the next time you chat. For example, you might alert the user to a news article about a topic that interests her, or alert a user when an appointment becomes available. You should clear them if the bot receives a delete user data activity.
+    Whenever a recipe is searched, the bot will respond with three recipes in separate ActivityCards from the CardFactory in the botBuilder API. 
 
-# Deploy this bot to Azure
-You can use the [MSBot][5] Bot Builder CLI tool to clone and configure the services this sample depends on.
+# Troubleshooting
 
-To install all Bot Builder tools -
+    Before attending the Boot camp at General Assembly, I was teaching myself to code with zero experience I learn JavaScript, React, Node and HTML/CSS. Teaching these by myself technologies took a lot of Googling and troubleshooting without any assistance. I attended the Boot camp to experince an intensive learning environment and improve my portfolio. The Boot camp was challenging and forced me again to be able to learn on the fly and I again improved my troubleshooting abilities. I have a mental checklist that I go through when encountering problems, the checklist isn't set in stone. But I will always follow the data to make sure its coming in as expected, I will copy and paste the message to Google and I will hard code variables or inputs to make sure that there isn't a problem with the implementation. 
 
-Ensure you have [Node.js](https://nodejs.org/) version 8.5 or higher
-
-```bash
-npm i -g msbot chatdown ludown qnamaker luis-apis botdispatch luisgen
-```
-
-To clone this bot, run
-```
-msbot clone services -f deploymentScripts/msbotClone -n myChatBot -l <Azure-location> --subscriptionId <Azure-subscription-id>
-```
-
-# Further reading
-- [Azure Bot Service Introduction][6]
-- [Bot State][7]
-- [Write directly to storage][8]
-- [Managing conversation and user state][9]
-
+# TODO 
+* I have enjoyed building this bot and while continue to improve it
+1) Improve Waterfall Dialogs.
+2) Improve Dialog paths based off user intent.
+3) Implement Recipe Save functionality.
+4) Implement Saved Recipe Search functionality.
+5) Deploy.
+6) Tweak Prompts.
 
 [1]: https://www.npmjs.com/package/restify
 [2]: https://github.com/microsoft/botframework-emulator
 [3]: https://aka.ms/botframework-emulator
-[4]: https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-howto-v4-state?view=azure-bot-service-4.0&tabs=js
-[5]: https://github.com/microsoft/botbuilder-tools
-[6]: https://docs.microsoft.com/en-us/azure/bot-service/bot-service-overview-introduction?view=azure-bot-service-4.0
-[7]: https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-storage-concept?view=azure-bot-service-4.0
-[8]: https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-howto-v4-storage?view=azure-bot-service-4.0&tabs=jsechoproperty%2Ccsetagoverwrite%2Ccsetag
-[9]: https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-howto-v4-state?view=azure-bot-service-4.0&tabs=js
-[10] https://dev.botframework.com
+[10]: https://dev.botframework.com
