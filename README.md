@@ -43,6 +43,8 @@ This bot has been created using [Microsoft Bot Framework][10]
 
     Before attending the Boot camp at General Assembly, I was teaching myself to code with zero experience I learn JavaScript, React, Node and HTML/CSS. Teaching these by myself technologies took a lot of Googling and troubleshooting without any assistance. I attended the Boot camp to experince an intensive learning environment and improve my portfolio. The Boot camp was challenging and forced me again to be able to learn on the fly and I again improved my troubleshooting abilities. I have a mental checklist that I go through when encountering problems, the checklist isn't set in stone. But I will always follow the data to make sure its coming in as expected, I will copy and paste the message to Google and I will hard code variables or inputs to make sure that there isn't a problem with the implementation. 
 
+    Because I had previous experience with JavaScript, React and Node when I began the Boot camp, I would constantly help my classmates. For example I helped my classmates understand ES6 Array methods when they were introduced by going through what each method does, the parameters and what it outputs. Even when we had projects or homework, I was frequently asked to help debug an issue or explain an issue. I enjoy helping others because I love the challenge and it helps me understand concepts even deeper.
+
 # TODO 
 * I have enjoyed building this bot and while continue to improve it
 1) Improve Waterfall Dialogs.
