@@ -1,6 +1,7 @@
 class UserProfile {
-    constructor(name=undefined, recipes=[]) {
+    constructor(name=undefined,search, recipes=[]) {
         this.name = name;
+        this.search=search;
         this.recipes = recipes;
     }
 };
