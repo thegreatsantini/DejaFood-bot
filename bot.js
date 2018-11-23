@@ -62,7 +62,7 @@ class MyBot {
     this.dialogs = new DialogSet(this.dialogState);
     // Add the Greeting dialog to the set
     this.dialogs.add(new GreetingDialog(GREETING_DIALOG, this.userProfileAccessor));
-    // this.dialogs.add(new RecipeSearchDialog(RECIPE_SEARCH_DIALOG, this.userProfileAccessor));
+    this.dialogs.add(new RecipeSearchDialog(RECIPE_SEARCH_DIALOG, this.userProfileAccessor));
     // this.dialogs.add(new ChoicePrompt(RECIPE_SEACH_DIALOG))
 
     this.conversationState = conversationState;
@@ -98,7 +98,13 @@ class MyBot {
             // Determine what we should do based on the top intent from LUIS.
             switch (topIntent) {
               case SEARCH_RECIPE:
-                await this.dialogs.add(new RecipeSearchDialog(RECIPE_SEARCH_DIALOG, this.userProfileAccessor, results.entities.keyPhrase));
+              const user = await this.userProfileAccessor.get(turnContext);
+              if ( !user ) {
+                await this.userProfileAccessor.set(turnContext, {search: results.entities.keyPhrase});
+              } else {
+                user.search = results.entities.keyPhrase;
+                await this.userProfileAccessor.set(turnContext, user);
+              }
                 await dc.beginDialog(RECIPE_SEARCH_DIALOG);
                 break;
               case GREETING_INTENT:
@@ -114,10 +120,12 @@ class MyBot {
             }
             break;
           case DialogTurnStatus.waiting:
+            console.log('status waiting')
             // The active dialog is waiting for a response from the user, so do nothing.
             break;
           case DialogTurnStatus.complete:
             // All child dialogs have ended. so do nothing.
+            console.log('status complete')
             break;
           default:
             // Unrecognized status from child dialog. Cancel all dialogs.
