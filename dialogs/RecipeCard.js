@@ -25,24 +25,6 @@ class RecipeCard {
 							"text": `${this.title}`,
 							"weight": "bolder",
 							"size": "medium"
-						},
-						{
-							"type": "ColumnSet",
-							"columns": [
-								{
-									"type": "Column",
-									"width": "stretch",
-									"items": [
-										{
-											"type": "TextBlock",
-											"spacing": "none",
-											"text": `${this.sourceUrl}`,
-											"isSubtle": true,
-											"wrap": true
-										}
-									]
-								}
-							]
 						}
 					]
 				}
@@ -51,7 +33,7 @@ class RecipeCard {
 				{
 					"type": "Action.OpenUrl",
 					"title": "View Recipe",
-					"url": "${cardUrl}"
+					"url": `${this.url}`
 				},
 				{
 					"type": "Action.OpenUrl",
