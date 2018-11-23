@@ -123,7 +123,7 @@ class Greeting extends ComponentDialog {
         }
         // if there is a name 
         if (userProfile.name) {
-            return await step.prompt(SEARCH_PROMPT, `Hello ${userProfile.name}, List ingriends that you want to find a recipe for`);
+            return await step.prompt(SEARCH_PROMPT, `Hello ${userProfile.name}, You are now ready to search for recipes`);
         } else {
             return await step.next();
         }
@@ -139,12 +139,13 @@ class Greeting extends ComponentDialog {
         const userProfile = await this.userProfileAccessor.get(step.context);
 
         if (step.result) {
-            const data = await searchRecipes(step.result);
-            for (let i = 0; i < 3; i++) {
-                step.context.sendActivity({
-                    attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
-                });
-            }
+            // const data = await searchRecipes(step.result);
+            // for (let i = 0; i < 3; i++) {
+            //     step.context.sendActivity({
+            //         attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
+            //     });
+            // }
+            step.context.sendActivity('I just queried from Greeting.js');
         }
         return await step.next()
     }
@@ -159,7 +160,6 @@ class Greeting extends ComponentDialog {
         // Save city, if prompted for
         const userProfile = await this.userProfileAccessor.get(step.context);
         if (step.result) {
-            console.log('step.result', step.result)
         }
         return await this.greetUser(step);
     }

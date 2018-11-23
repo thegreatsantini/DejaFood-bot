@@ -53,7 +53,6 @@ class RecipeSearch extends ComponentDialog {
 
         // Save off our state accessor for later use
         this.userProfileAccessor = userProfileAccessor;
-        console.log("***********************RECIPE_SEARCH_DIALOG", this.ingredients)
     }
     /**
      * Waterfall Dialog step functions.
@@ -84,18 +83,19 @@ class RecipeSearch extends ComponentDialog {
      */
     async promptForNameStep(step) {
         const userProfile = await this.userProfileAccessor.get(step.context);
-        console.log('userprofile',userProfile)
 
         // if we have everything we need,
         if (userProfile !== undefined && userProfile.name !== undefined) {
             // search for recipes
             const query = userProfile.search.join(',').replace(/\s/g, ',');
-            const data = await searchRecipes(query)
-            for (let i = 0; i < 3; i++) {
-                step.context.sendActivity({
-                    attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
-                });
-            }
+            // const data = await searchRecipes(query)
+            // for (let i = 0; i < 3; i++) {
+            //     step.context.sendActivity({
+            //         attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
+            //     });
+            // }
+            step.context.sendActivity('I just queried the api');
+            return await step.endDialog();
         }
         if (!userProfile.name) {
             // prompt for name, if missing
@@ -123,13 +123,14 @@ class RecipeSearch extends ComponentDialog {
         if ( userProfile.search ) {
             // const query = userProfile.search.join(',').replace(/\b(and|or)\b/gi, '');
             const query = userProfile.search.join(',').replace(/\s/g, ',');
-            console.log('RECIPESTEP', query)
-            const data = await searchRecipes(query)
-            for (let i = 0; i < 3; i++) {
-                step.context.sendActivity({
-                    attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
-                });
-            }
+            // const data = await searchRecipes(query)
+            // for (let i = 0; i < 3; i++) {
+            //     step.context.sendActivity({
+            //         attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
+            //     });
+            // }
+            step.context.sendActivity('I just queried the api');
+            return await step.endDialog();
         }
         return await this.greetUser(step);
     }
