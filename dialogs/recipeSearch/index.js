@@ -1,3 +1,3 @@
-const { RecipeSearch } = require('./RecipeSearchDialoge');
+const { RecipeSearchDialog } = require('./recipeSearch');
 
-exports.RecipeSearch = RecipeSearch;
+exports.RecipeSearchDialog = RecipeSearchDialog;

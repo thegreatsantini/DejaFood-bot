@@ -7,7 +7,7 @@ const LUIS_CONFIGURATION = 'Starter_Key';
 const { ChoicePrompt, DialogSet, DialogTurnStatus } = require('botbuilder-dialogs');
 const { UserProfile } = require('./dialogs/greeting/UserProfile');
 const { GreetingDialog } = require('./dialogs/greeting');
-// const { RecipeSearch } = require('./dialogs/recipeSearch')
+const { RecipeSearchDialog } = require('./dialogs/recipeSearch')
 //dialog cards
 const IntroCard = require('./resources/IntroCard.json')
 const WELCOMED_USER = 'welcomedUserProperty';
@@ -18,10 +18,10 @@ const USER_PROFILE_PROPERTY = 'userProfileProperty';
 
 // Greeting Dialog ID
 const GREETING_DIALOG = 'greetingDialog';
-const RECIPE_SEACH_DIALOG = 'greetingDialog';
+const RECIPE_SEARCH_DIALOG = 'recipeSearch';
 
 // Supported LUIS Intents.
-const SEARCH_RECIPE = 'searchRecipe'
+const SEARCH_RECIPE = 'Search_Recipe'
 const GREETING_INTENT = 'Greeting';
 const CANCEL_INTENT = 'Cancel';
 const HELP_INTENT = 'Help';
@@ -62,7 +62,7 @@ class MyBot {
     this.dialogs = new DialogSet(this.dialogState);
     // Add the Greeting dialog to the set
     this.dialogs.add(new GreetingDialog(GREETING_DIALOG, this.userProfileAccessor));
-    // this.dialogs.add(new RecipeSearch(GREETING_DIALOG, this.userProfileAccessor));
+    // this.dialogs.add(new RecipeSearchDialog(RECIPE_SEARCH_DIALOG, this.userProfileAccessor));
     // this.dialogs.add(new ChoicePrompt(RECIPE_SEACH_DIALOG))
 
     this.conversationState = conversationState;
@@ -91,7 +91,6 @@ class MyBot {
 
       // If no active dialog or no active dialog has responded,
       if (!dc.context.responded) {
-        console.log(topIntent)
         // Switch on return results from any active dialog.
         switch (dialogResult.status) {
           // dc.continueDialog() returns DialogTurnStatus.empty if there are no active dialogs
@@ -99,9 +98,11 @@ class MyBot {
             // Determine what we should do based on the top intent from LUIS.
             switch (topIntent) {
               case SEARCH_RECIPE:
-                await dc.beginDialog(GREETING_DIALOG);
+                await this.dialogs.add(new RecipeSearchDialog(RECIPE_SEARCH_DIALOG, this.userProfileAccessor, results.entities.keyPhrase));
+                await dc.beginDialog(RECIPE_SEARCH_DIALOG);
                 break;
               case GREETING_INTENT:
+                console.log('status', DialogTurnStatus.empty)
                 await dc.beginDialog(GREETING_DIALOG);
                 break;
               case NONE_INTENT:

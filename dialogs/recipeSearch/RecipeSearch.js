@@ -7,11 +7,13 @@
 const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dialogs');
 
 // User state for greeting dialog
-const { UserProfile } = require('./greeting/UserProfile');
+const { UserProfile } = require('../greeting/UserProfile');
+
 
 // Prompt IDs
 const NAME_PROMPT = 'namePrompt';
 const SEARCH_PROMPT = 'searchPrompt';
+const PROFILE_DIALOG = 'profileDialog';
 
 const VALIDATION_SUCCEEDED = true;
 const VALIDATION_FAILED = !VALIDATION_SUCCEEDED;
@@ -27,7 +29,7 @@ const VALIDATION_FAILED = !VALIDATION_SUCCEEDED;
  * @param {PropertyStateAccessor} userProfileAccessor property accessor for user state
  */
 class RecipeSearch extends ComponentDialog {
-    constructor(dialogId, userProfileAccessor) {
+    constructor(dialogId, userProfileAccessor, ingredients = []) {
         super(dialogId);
 
         // validate what was passed in
@@ -40,17 +42,16 @@ class RecipeSearch extends ComponentDialog {
         this.addDialog(new WaterfallDialog(PROFILE_DIALOG, [
             this.initializeStateStep.bind(this),
             this.promptForNameStep.bind(this),
-            this.promptForCityStep.bind(this),
             this.displayGreetingStep.bind(this)
         ]));
 
-        // Add text prompts for name and city
+        this.ingredients = ingredients
+        // Add text prompts for name and ingrediants
         this.addDialog(new TextPrompt(NAME_PROMPT, this.validateName));
-        this.addDialog(new TextPrompt(SEARCH_PROMPT, this.validateCity));
 
         // Save off our state accessor for later use
         this.userProfileAccessor = userProfileAccessor;
-        console.log('********************************')
+        console.log("***********************RECIPE_SEARCH_DIALOG")
     }
     /**
      * Waterfall Dialog step functions.
@@ -61,6 +62,7 @@ class RecipeSearch extends ComponentDialog {
      * @param {WaterfallStepContext} step contextual information for the current step being executed
      */
     async initializeStateStep(step) {
+        console.log(this.ingredients)
         let userProfile = await this.userProfileAccessor.get(step.context);
         if (userProfile === undefined) {
             if (step.options && step.options.userProfile) {
@@ -81,9 +83,11 @@ class RecipeSearch extends ComponentDialog {
      */
     async promptForNameStep(step) {
         const userProfile = await this.userProfileAccessor.get(step.context);
-        // if we have everything we need, greet user and return
-        if (userProfile !== undefined && userProfile.name !== undefined && userProfile.city !== undefined) {
-            return await this.greetUser(step);
+        // if we have everything we need,
+        if (userProfile !== undefined && userProfile.name !== undefined) {
+            // search for recipes
+            console.log(step.results)
+            // return await this.greetUser(step);
         }
         if (!userProfile.name) {
             // prompt for name, if missing
@@ -110,7 +114,7 @@ class RecipeSearch extends ComponentDialog {
             await this.userProfileAccessor.set(step.context, userProfile);
         }
         if (!userProfile.city) {
-            return await step.prompt(CITY_PROMPT, `Hello ${ userProfile.name }, what city do you live in?`);
+            return await step.prompt(CITY_PROMPT, `Hello ${userProfile.name}, what city do you live in?`);
         } else {
             return await step.next();
         }
@@ -144,7 +148,7 @@ class RecipeSearch extends ComponentDialog {
         if (value.length >= NAME_LENGTH_MIN) {
             return VALIDATION_SUCCEEDED;
         } else {
-            await validatorContext.context.sendActivity(`Names need to be at least ${ NAME_LENGTH_MIN } characters long.`);
+            await validatorContext.context.sendActivity(`Names need to be at least ${NAME_LENGTH_MIN} characters long.`);
             return VALIDATION_FAILED;
         }
     }
@@ -159,7 +163,7 @@ class RecipeSearch extends ComponentDialog {
         if (value.length >= CITY_LENGTH_MIN) {
             return VALIDATION_SUCCEEDED;
         } else {
-            await validatorContext.context.sendActivity(`City names needs to be at least ${ CITY_LENGTH_MIN } characters long.`);
+            await validatorContext.context.sendActivity(`City names needs to be at least ${CITY_LENGTH_MIN} characters long.`);
             return VALIDATION_FAILED;
         }
     }
@@ -171,10 +175,10 @@ class RecipeSearch extends ComponentDialog {
     async greetUser(step) {
         const userProfile = await this.userProfileAccessor.get(step.context);
         // Display to the user their profile information and end dialog
-        await step.context.sendActivity(`Hi ${ userProfile.name }, from ${ userProfile.city }, nice to meet you!`);
+        await step.context.sendActivity(`Hi ${userProfile.name}, from ${userProfile.city}, nice to meet you!`);
         await step.context.sendActivity(`You can always say 'My name is <your name> to reintroduce yourself to me.`);
         return await step.endDialog();
     }
 }
 
-exports.RecipeSearch = RecipeSearch;
+exports.RecipeSearchDialog = RecipeSearch;
