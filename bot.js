@@ -87,7 +87,19 @@ class MyBot {
       const topIntent = LuisRecognizer.topIntent(results)
 
       // I think this is necessary in case something gets paused for whatever reason
-      dialogResult = await dc.continueDialog();
+      // dialogResult = await dc.continueDialog();
+
+      await this.updateUserProfile(results, turnContext);
+      const interrupted = await this.isTurnInterrupted(dc, results);
+      if (interrupted) {
+        if (dc.activeDialog !== undefined) {
+          // issue a re-prompt on the active dialog
+          dialogResult = await dc.repromptDialog();
+        } // Else: We dont have an active dialog so nothing to continue here.
+      } else {
+        // No interruption. Continue any active dialogs.
+        dialogResult = await dc.continueDialog();
+      }
 
       // If no active dialog or no active dialog has responded,
       if (!dc.context.responded) {
@@ -98,17 +110,16 @@ class MyBot {
             // Determine what we should do based on the top intent from LUIS.
             switch (topIntent) {
               case SEARCH_RECIPE:
-              const user = await this.userProfileAccessor.get(turnContext);
-              if ( !user ) {
-                await this.userProfileAccessor.set(turnContext, {search: results.entities.keyPhrase});
-              } else {
-                user.search = results.entities.keyPhrase;
-                await this.userProfileAccessor.set(turnContext, user);
-              }
+                const user = await this.userProfileAccessor.get(turnContext);
+                if (!user) {
+                  await this.userProfileAccessor.set(turnContext, { search: results.entities.keyPhrase });
+                } else {
+                  user.search = results.entities.keyPhrase;
+                  await this.userProfileAccessor.set(turnContext, user);
+                }
                 await dc.beginDialog(RECIPE_SEARCH_DIALOG);
                 break;
               case GREETING_INTENT:
-                console.log('status', DialogTurnStatus.empty)
                 await dc.beginDialog(GREETING_DIALOG);
                 break;
               case NONE_INTENT:
@@ -120,12 +131,10 @@ class MyBot {
             }
             break;
           case DialogTurnStatus.waiting:
-            console.log('status waiting')
             // The active dialog is waiting for a response from the user, so do nothing.
             break;
           case DialogTurnStatus.complete:
             // All child dialogs have ended. so do nothing.
-            console.log('status complete')
             break;
           default:
             // Unrecognized status from child dialog. Cancel all dialogs.
@@ -169,13 +178,41 @@ class MyBot {
     }
   }
   /**
+     * Look at the LUIS results and determine if we need to handle
+     * an interruptions due to a Help or Cancel intent
+     *
+     * @param {DialogContext} dc - dialog context
+     * @param {LuisResults} luisResults - LUIS recognizer results
+     */
+  async isTurnInterrupted(dc, luisResults) {
+    const topIntent = LuisRecognizer.topIntent(luisResults);
+
+    // see if there are anh conversation interrupts we need to handle
+    if (topIntent === CANCEL_INTENT) {
+      if (dc.activeDialog) {
+        // cancel all active dialog (clean the stack)
+        await dc.cancelAllDialogs();
+        await dc.context.sendActivity(`Ok.  I've cancelled our last activity.`);
+      } else {
+        await dc.context.sendActivity(`I don't have anything to cancel.`);
+      }
+      return true; // this is an interruption
+    }
+
+    if (topIntent === HELP_INTENT) {
+      await dc.context.sendActivity(`Let me try to provide some help.`);
+      await dc.context.sendActivity(`I understand greetings, being asked for help, or being asked to cancel what I am doing.`);
+      return true; // this is an interruption
+    }
+    return false; // this is not an interruption
+  }
+  /**
      * Helper function to update user profile with entities returned by LUIS.
      *
      * @param {LuisResults} luisResults - LUIS recognizer results
      * @param {DialogContext} dc - dialog context
      */
   async updateUserProfile(luisResult, context) {
-    console.log(luisResult.entities.personName)
     // Do we have any entities?
     if (Object.keys(luisResult.entities).length !== 1) {
       // get userProfile object using the accessor
@@ -185,12 +222,10 @@ class MyBot {
       }
       // see if we have any user name entities
       if (luisResult.entities.personName !== undefined) {
-        console.log('exists')
         userProfile.name = luisResult.entities.personName[0]
       }
       // set the new values
       await this.userProfileAccessor.set(context, userProfile);
-      console.log('current user', userProfile)
     }
   }
 }
