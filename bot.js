@@ -6,7 +6,6 @@ const { LuisRecognizer } = require('botbuilder-ai');
 const LUIS_CONFIGURATION = 'Starter_Key';
 const { ChoicePrompt, DialogSet, DialogTurnStatus } = require('botbuilder-dialogs');
 const { UserProfile } = require('./dialogs/greeting/UserProfile');
-console.log(UserProfile)
 const { GreetingDialog } = require('./dialogs/greeting');
 // const { RecipeSearch } = require('./dialogs/recipeSearch')
 //dialog cards
@@ -154,7 +153,6 @@ class MyBot {
         // bot was added to the conversation, and the opposite indicates this is a user.
         if (turnContext.activity.membersAdded[idx].id !== turnContext.activity.recipient.id) {
           turnContext.sendActivity({
-            text: 'Intro Adaptive Card',
             attachments: [CardFactory.adaptiveCard(IntroCard)]
           });
         }

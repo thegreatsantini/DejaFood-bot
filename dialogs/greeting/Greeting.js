@@ -114,7 +114,7 @@ class Greeting extends ComponentDialog {
     async promptForRecipeSearchStep(step) {
         // save name, if prompted for
         const userProfile = await this.userProfileAccessor.get(step.context);
-        // if there isnt a name set yet
+        // if there isnt a name set yet. add a name
         if (userProfile.name === undefined && step.result) {
             let lowerCaseName = step.result;
             // capitalize and set name
@@ -125,7 +125,6 @@ class Greeting extends ComponentDialog {
         if (userProfile.name) {
             return await step.prompt(SEARCH_PROMPT, `Hello ${userProfile.name}, List ingriends that you want to find a recipe for`);
         } else {
-            console.log('step.next')
             return await step.next();
         }
     }
@@ -139,11 +138,13 @@ class Greeting extends ComponentDialog {
         const currentContext = step.context
         const userProfile = await this.userProfileAccessor.get(step.context);
 
-        // console.log(card)
-        // console.log(test)
         if (step.result) {
             const data = await searchRecipes(step.result);
-            console.log(data)
+            for (let i = 0; i < 3; i++) {
+                step.context.sendActivity({
+                    attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
+                });
+            }
         }
         return await step.next()
     }
@@ -159,10 +160,6 @@ class Greeting extends ComponentDialog {
         const userProfile = await this.userProfileAccessor.get(step.context);
         if (step.result) {
             console.log('step.result', step.result)
-            // let lowerCaseCity = step.result;
-            // // capitalize and set city
-            // userProfile.city = lowerCaseCity.charAt(0).toUpperCase() + lowerCaseCity.substr(1);
-            // await this.userProfileAccessor.set(step.context, userProfile);
         }
         return await this.greetUser(step);
     }
