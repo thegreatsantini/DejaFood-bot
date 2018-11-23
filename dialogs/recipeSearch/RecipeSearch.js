@@ -9,6 +9,9 @@ const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dia
 // User state for greeting dialog
 const { UserProfile } = require('../greeting/UserProfile');
 
+const { searchRecipes } = require('../../recipeAPI')
+
+const NAME_LENGTH_MIN = 3;
 
 // Prompt IDs
 const NAME_PROMPT = 'namePrompt';
@@ -29,7 +32,7 @@ const VALIDATION_FAILED = !VALIDATION_SUCCEEDED;
  * @param {PropertyStateAccessor} userProfileAccessor property accessor for user state
  */
 class RecipeSearch extends ComponentDialog {
-    constructor(dialogId, userProfileAccessor, ingredients = []) {
+    constructor(dialogId, userProfileAccessor) {
         super(dialogId);
 
         // validate what was passed in
@@ -42,16 +45,15 @@ class RecipeSearch extends ComponentDialog {
         this.addDialog(new WaterfallDialog(PROFILE_DIALOG, [
             this.initializeStateStep.bind(this),
             this.promptForNameStep.bind(this),
-            this.displayGreetingStep.bind(this)
+            this.displayRecipeResults.bind(this)
         ]));
 
-        this.ingredients = ingredients
         // Add text prompts for name and ingrediants
         this.addDialog(new TextPrompt(NAME_PROMPT, this.validateName));
 
         // Save off our state accessor for later use
         this.userProfileAccessor = userProfileAccessor;
-        console.log("***********************RECIPE_SEARCH_DIALOG")
+        console.log("***********************RECIPE_SEARCH_DIALOG", this.ingredients)
     }
     /**
      * Waterfall Dialog step functions.
@@ -62,7 +64,6 @@ class RecipeSearch extends ComponentDialog {
      * @param {WaterfallStepContext} step contextual information for the current step being executed
      */
     async initializeStateStep(step) {
-        console.log(this.ingredients)
         let userProfile = await this.userProfileAccessor.get(step.context);
         if (userProfile === undefined) {
             if (step.options && step.options.userProfile) {
@@ -83,11 +84,18 @@ class RecipeSearch extends ComponentDialog {
      */
     async promptForNameStep(step) {
         const userProfile = await this.userProfileAccessor.get(step.context);
+        console.log('userprofile',userProfile)
+
         // if we have everything we need,
         if (userProfile !== undefined && userProfile.name !== undefined) {
             // search for recipes
-            console.log(step.results)
-            // return await this.greetUser(step);
+            const query = userProfile.search.join(',').replace(/\s/g, ',');
+            const data = await searchRecipes(query)
+            for (let i = 0; i < 3; i++) {
+                step.context.sendActivity({
+                    attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
+                });
+            }
         }
         if (!userProfile.name) {
             // prompt for name, if missing
@@ -96,29 +104,7 @@ class RecipeSearch extends ComponentDialog {
             return await step.next();
         }
     }
-    /**
-     * Waterfall Dialog step functions.
-     *
-     * Using a text prompt, prompt the user for the city in which they live.
-     * Only prompt if we don't have this information already.
-     *
-     * @param {WaterfallStepContext} step contextual information for the current step being executed
-     */
-    async promptForCityStep(step) {
-        // save name, if prompted for
-        const userProfile = await this.userProfileAccessor.get(step.context);
-        if (userProfile.name === undefined && step.result) {
-            let lowerCaseName = step.result;
-            // capitalize and set name
-            userProfile.name = lowerCaseName.charAt(0).toUpperCase() + lowerCaseName.substr(1);
-            await this.userProfileAccessor.set(step.context, userProfile);
-        }
-        if (!userProfile.city) {
-            return await step.prompt(CITY_PROMPT, `Hello ${userProfile.name}, what city do you live in?`);
-        } else {
-            return await step.next();
-        }
-    }
+
     /**
      * Waterfall Dialog step functions.
      *
@@ -126,14 +112,24 @@ class RecipeSearch extends ComponentDialog {
      *
      * @param {WaterfallStepContext} step contextual information for the current step being executed
      */
-    async displayGreetingStep(step) {
-        // Save city, if prompted for
+    async displayRecipeResults(step) {
         const userProfile = await this.userProfileAccessor.get(step.context);
-        if (userProfile.city === undefined && step.result) {
-            let lowerCaseCity = step.result;
-            // capitalize and set city
-            userProfile.city = lowerCaseCity.charAt(0).toUpperCase() + lowerCaseCity.substr(1);
+        if (userProfile.name === undefined && step.result) {
+            let lowerCaseName = step.result;
+            // capitalize and set name
+            userProfile.name = lowerCaseName.charAt(0).toUpperCase() + lowerCaseName.substr(1);
             await this.userProfileAccessor.set(step.context, userProfile);
+        }
+        if ( userProfile.search ) {
+            // const query = userProfile.search.join(',').replace(/\b(and|or)\b/gi, '');
+            const query = userProfile.search.join(',').replace(/\s/g, ',');
+            console.log('RECIPESTEP', query)
+            const data = await searchRecipes(query)
+            for (let i = 0; i < 3; i++) {
+                step.context.sendActivity({
+                    attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
+                });
+            }
         }
         return await this.greetUser(step);
     }
@@ -152,21 +148,7 @@ class RecipeSearch extends ComponentDialog {
             return VALIDATION_FAILED;
         }
     }
-    /**
-     * Validator function to verify if city meets required constraints.
-     *
-     * @param {PromptValidatorContext} validation context for this validator.
-     */
-    async validateCity(validatorContext) {
-        // Validate that the user entered a minimum length for their name
-        const value = (validatorContext.recognized.value || '').trim();
-        if (value.length >= CITY_LENGTH_MIN) {
-            return VALIDATION_SUCCEEDED;
-        } else {
-            await validatorContext.context.sendActivity(`City names needs to be at least ${CITY_LENGTH_MIN} characters long.`);
-            return VALIDATION_FAILED;
-        }
-    }
+
     /**
      * Helper function to greet user with information in greetingState.
      *
@@ -175,7 +157,7 @@ class RecipeSearch extends ComponentDialog {
     async greetUser(step) {
         const userProfile = await this.userProfileAccessor.get(step.context);
         // Display to the user their profile information and end dialog
-        await step.context.sendActivity(`Hi ${userProfile.name}, from ${userProfile.city}, nice to meet you!`);
+        await step.context.sendActivity(`Hi ${userProfile.name}!`);
         await step.context.sendActivity(`You can always say 'My name is <your name> to reintroduce yourself to me.`);
         return await step.endDialog();
     }
