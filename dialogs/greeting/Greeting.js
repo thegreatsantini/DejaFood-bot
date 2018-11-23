@@ -4,11 +4,14 @@
 // greeting.js defines the greeting dialog
 
 // Import required Bot Builder
+require('dotenv').config()
+const request = require('request')
 const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dialogs');
-
+const { CardFactory } = require('botbuilder')
 // User state for greeting dialog
 const { UserProfile } = require('./UserProfile');
-
+const { RecipeCard } = require('../RecipeCard')
+const { searchRecipes } = require('../../recipeAPI')
 // Minimum length requirements for city and name
 const NAME_LENGTH_MIN = 3;
 
@@ -120,7 +123,7 @@ class Greeting extends ComponentDialog {
         }
         // if there is a name 
         if (userProfile.name) {
-            return await step.prompt(SEARCH_PROMPT, `Hello ${ userProfile.name }, List ingriends that you want to find a recipe for`);
+            return await step.prompt(SEARCH_PROMPT, `Hello ${userProfile.name}, List ingriends that you want to find a recipe for`);
         } else {
             console.log('step.next')
             return await step.next();
@@ -133,9 +136,14 @@ class Greeting extends ComponentDialog {
      * @param {WaterfallStepContext} step contextual information for the current step being executed
      */
     async searchRecipesStep(step) {
+        const currentContext = step.context
         const userProfile = await this.userProfileAccessor.get(step.context);
-        if ( step.result) {
-            console.log('search step',step.result)
+
+        // console.log(card)
+        // console.log(test)
+        if (step.result) {
+            const data = await searchRecipes(step.result);
+            console.log(data)
         }
         return await step.next()
     }
@@ -169,7 +177,7 @@ class Greeting extends ComponentDialog {
         if (value.length >= NAME_LENGTH_MIN) {
             return VALIDATION_SUCCEEDED;
         } else {
-            await validatorContext.context.sendActivity(`Names need to be at least ${ NAME_LENGTH_MIN } characters long.`);
+            await validatorContext.context.sendActivity(`Names need to be at least ${NAME_LENGTH_MIN} characters long.`);
             return VALIDATION_FAILED;
         }
     }
@@ -181,7 +189,7 @@ class Greeting extends ComponentDialog {
     async greetUser(step) {
         const userProfile = await this.userProfileAccessor.get(step.context);
         // Display to the user their profile information and end dialog
-        await step.context.sendActivity(`Hi ${ userProfile.name }, nice to meet you!`);
+        await step.context.sendActivity(`Hi ${userProfile.name}, nice to meet you!`);
         await step.context.sendActivity(`You can always say 'My name is <your name> to reintroduce yourself to me.`);
         return await step.endDialog();
     }
