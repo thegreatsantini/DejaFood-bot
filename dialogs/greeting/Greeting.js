@@ -5,13 +5,13 @@
 
 // Import required Bot Builder
 require('dotenv').config()
-const request = require('request')
+// const request = require('request')
 const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dialogs');
-const { CardFactory } = require('botbuilder')
+// const { CardFactory } = require('botbuilder')
 // User state for greeting dialog
-const { UserProfile } = require('./UserProfile');
-const { RecipeCard } = require('../RecipeCard')
-const { searchRecipes } = require('../../recipeAPI')
+const { UserProfile } = require('../UserProfile');
+// const { RecipeCard } = require('../RecipeCard')
+// const { searchRecipes } = require('../../recipeAPI')
 // Minimum length requirements for city and name
 const NAME_LENGTH_MIN = 3;
 
@@ -21,7 +21,7 @@ const PROFILE_DIALOG = 'profileDialog';
 // Prompt IDs
 const NAME_PROMPT = 'namePrompt';
 const SEARCH_PROMPT = 'searchPrompt';
-const SEARCH_RESULTS = 'searchResults'
+
 
 const VALIDATION_SUCCEEDED = true;
 const VALIDATION_FAILED = !VALIDATION_SUCCEEDED;
@@ -51,15 +51,13 @@ class Greeting extends ComponentDialog {
             this.initializeStateStep.bind(this),
             this.promptForNameStep.bind(this),
             this.promptForRecipeSearchStep.bind(this),
-            this.searchRecipesStep.bind(this),
-            this.displayGreetingStep.bind(this)
+            this.searchRecipeStep.bind(this)
         ]));
 
-        // Add text prompts for name and ingrediants
+        // Add text prompts for name and ingredients
         this.addDialog(new TextPrompt(NAME_PROMPT, this.validateName));
         this.addDialog(new TextPrompt(SEARCH_PROMPT));
-        this.addDialog(new TextPrompt(SEARCH_RESULTS));
-
+        
         // Save off our state accessor for later use
         this.userProfileAccessor = userProfileAccessor;
     }
@@ -93,7 +91,7 @@ class Greeting extends ComponentDialog {
     async promptForNameStep(step) {
         const userProfile = await this.userProfileAccessor.get(step.context);
         // if we have everything we need, greet user and return
-        if (userProfile !== undefined && userProfile.name !== undefined && userProfile.city !== undefined) {
+        if (userProfile !== undefined && userProfile.name !== undefined) {
             return await this.greetUser(step);
         }
         if (!userProfile.name) {
@@ -112,10 +110,11 @@ class Greeting extends ComponentDialog {
      * @param {WaterfallStepContext} step contextual information for the current step being executed
      */
     async promptForRecipeSearchStep(step) {
-        // save name, if prompted for
+        // get current user
         const userProfile = await this.userProfileAccessor.get(step.context);
-        // if there isnt a name set yet. add a name
-        if (userProfile.name === undefined && step.result) {
+
+        // if the user gave their name
+        if (step.result) {
             let lowerCaseName = step.result;
             // capitalize and set name
             userProfile.name = lowerCaseName.charAt(0).toUpperCase() + lowerCaseName.substr(1);
@@ -123,46 +122,27 @@ class Greeting extends ComponentDialog {
         }
         // if there is a name 
         if (userProfile.name) {
-            return await step.prompt(SEARCH_PROMPT, `Hello ${userProfile.name}, You are now ready to search for recipes`);
+            // return await step.prompt(SEARCH_PROMPT,`Hello ${userProfile.name}, You are now ready to search for recipes`);
+            await step.context.sendActivity(`Hello ${userProfile.name}, You are now ready to search for recipes`)
+            return await this.greetUser(step)
         } else {
             return await step.next();
         }
     }
     /**
-     *
-     * API to find recipes from input ingrdients
-     *
-     * @param {WaterfallStepContext} step contextual information for the current step being executed
-     */
-    async searchRecipesStep(step) {
-        const currentContext = step.context
-        const userProfile = await this.userProfileAccessor.get(step.context);
-
-        if (step.result) {
-            // const data = await searchRecipes(step.result);
-            // for (let i = 0; i < 3; i++) {
-            //     step.context.sendActivity({
-            //         attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
-            //     });
-            // }
-            step.context.sendActivity('I just queried from Greeting.js');
-        }
-        return await step.next()
-    }
-    /**
      * Waterfall Dialog step functions.
      *
-     * Having all the data we need, simply display a summary back to the user.
+     * Using a text prompt, prompt the user for the city in which they live.
+     * Only prompt if we don't have this information already.
      *
      * @param {WaterfallStepContext} step contextual information for the current step being executed
      */
-    async displayGreetingStep(step) {
-        // Save city, if prompted for
-        const userProfile = await this.userProfileAccessor.get(step.context);
-        if (step.result) {
-        }
-        return await this.greetUser(step);
+    async searchRecipeStep(step) {
+        // will implement search functionality in the future
+        console.log(step.result)
+        return await this.greetUser(step)
     }
+
     /**
      * Validator function to verify that user name meets required constraints.
      *
@@ -184,9 +164,7 @@ class Greeting extends ComponentDialog {
      * @param {WaterfallStepContext} step contextual information for the current step being executed
      */
     async greetUser(step) {
-        const userProfile = await this.userProfileAccessor.get(step.context);
         // Display to the user their profile information and end dialog
-        await step.context.sendActivity(`Hi ${userProfile.name}, nice to meet you!`);
         await step.context.sendActivity(`You can always say 'My name is <your name> to reintroduce yourself to me.`);
         return await step.endDialog();
     }
