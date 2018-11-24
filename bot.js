@@ -10,20 +10,22 @@ const { GreetingDialog } = require('./dialogs/greeting');
 const { RecipeSearchDialog } = require('./dialogs/recipeSearch');
 const { HelpDialog } = require('./dialogs/help');
 //dialog cards
-const IntroCard = require('./resources/IntroCard.json')
+const IntroCard = require('./resources/IntroCard.json');
 const WELCOMED_USER = 'welcomedUserProperty';
 
 // State Accessor Properties
 const DIALOG_STATE_PROPERTY = 'dialogState';
 const USER_PROFILE_PROPERTY = 'userProfileProperty';
 
-// Greeting Dialog ID
+// Dialog IDs
 const GREETING_DIALOG = 'greetingDialog';
 const RECIPE_SEARCH_DIALOG = 'recipeSearch';
-const HELP_DIALOG = 'helpDialog'
+const HELP_DIALOG = 'helpDialog';
 
 // Supported LUIS Intents.
-const SEARCH_RECIPE = 'Search_Recipe'
+const SEARCH_RECIPE = 'Search_Recipe';
+const ADD_TO_SEARCH_INTENT = 'Add_To_Search';
+const REMOVE_FROM_SEARCH_INTENT = 'Remove_From_Search';
 const GREETING_INTENT = 'Greeting';
 const CANCEL_INTENT = 'Cancel';
 const HELP_INTENT = 'Help';
@@ -41,13 +43,13 @@ class MyBot {
     if (!botConfig) throw new Error('Missing parameter.  botConfig is required');
 
     // LUIS recognizer
-    const luisConfig = botConfig.findServiceByNameOrId(LUIS_CONFIGURATION)
+    const luisConfig = botConfig.findServiceByNameOrId(LUIS_CONFIGURATION);
     if (!luisConfig || !luisConfig.appId) throw new Error('Missing LUIS configs')
     this.luisRecognizer = new LuisRecognizer({
       applicationId: luisConfig.appId,
       endpoint: luisConfig.getEndpoint(),
       endpointKey: luisConfig.authoringKey
-    })
+    });
 
     // Creates a new state accessor property.
     // See https://aka.ms/about-bot-state-accessors to learn more about the bot state and state accessors.
@@ -86,7 +88,7 @@ class MyBot {
       const results = await this.luisRecognizer.recognize(turnContext);
       const topIntent = LuisRecognizer.topIntent(results)
 
-      // I think this is necessary in case something gets paused for whatever reason
+      // Make sure I dont need this
       // dialogResult = await dc.continueDialog();
 
       await this.updateUserProfile(results, turnContext);
@@ -100,6 +102,21 @@ class MyBot {
         // No interruption. Continue any active dialogs.
         dialogResult = await dc.continueDialog();
       }
+      // check intents in case search needs modifing 
+      const user = await this.userProfileAccessor.get(turnContext);
+      let prevSearch = user.search;
+      switch (topIntent) {
+        case ADD_TO_SEARCH_INTENT:
+          // add items to previous search array and remove duplicates
+          user.search = prevSearch.concat(results.entities.keyPhrase).filter((item, i, arr) => arr.indexOf(i) !== item);
+          break;
+        case REMOVE_FROM_SEARCH_INTENT:
+          // remove items from previous search 
+          user.search = prevSearch.filter(item => !results.entities.keyPhrase.includes(item));
+          break;
+      }
+      // save changes to user
+      await this.userProfileAccessor.set(turnContext, user);
 
       // If no active dialog or no active dialog has responded,
       if (!dc.context.responded) {
@@ -110,15 +127,18 @@ class MyBot {
             // Determine what we should do based on the top intent from LUIS.
             switch (topIntent) {
               case SEARCH_RECIPE:
-                const user = await this.userProfileAccessor.get(turnContext);
                 user.search = results.entities.keyPhrase;
                 await this.userProfileAccessor.set(turnContext, user);
-                console.log('**********SEARCH INTENT**************')
                 await dc.beginDialog(RECIPE_SEARCH_DIALOG);
                 break;
               case GREETING_INTENT:
-                console.log('*****************GREETING intent*************')
                 await dc.beginDialog(GREETING_DIALOG);
+                break;
+              case ADD_TO_SEARCH_INTENT:
+                await dc.beginDialog(RECIPE_SEARCH_DIALOG);
+                break;
+              case REMOVE_FROM_SEARCH_INTENT:
+                await dc.beginDialog(RECIPE_SEARCH_DIALOG);
                 break;
               case NONE_INTENT:
               default:
@@ -212,6 +232,7 @@ class MyBot {
      */
   async updateUserProfile(luisResult, context) {
     // Do we have any entities?
+    console.log("------------------------->UPDATE PROFILE")
     if (Object.keys(luisResult.entities).length !== 1) {
       // get userProfile object using the accessor
       let userProfile = await this.userProfileAccessor.get(context);
