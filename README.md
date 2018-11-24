@@ -30,8 +30,11 @@ LUIS is used to predict users intent during an input and based of that intent th
 Intents are preset.
 * Greeting
 * Search_Recipe
+* ADD_TO_SEARCH
+* MODIFY_SEARCH
 * Cancel
 * Help
+* None
 
 If the intent is Greeting than the bot will guide them through prompts that will create a profile and search for a recipe. There are several checks through the waterfall dialog that will save user data and/or give prompts
 
