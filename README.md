@@ -30,8 +30,9 @@ LUIS is used to predict users intent during an input and based of that intent th
 Intents are preset.
 * Greeting
 * Search_Recipe
-* ADD_TO_SEARCH
-* MODIFY_SEARCH
+* Add_To_Search
+* Modify_Search
+* Set_Name
 * Cancel
 * Help
 * None
