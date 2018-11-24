@@ -7,7 +7,7 @@
 const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dialogs');
 
 // User state for greeting dialog
-const { UserProfile } = require('../greeting/UserProfile');
+const { UserProfile } = require('../UserProfile');
 
 const { searchRecipes } = require('../../recipeAPI')
 

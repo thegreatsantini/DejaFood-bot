@@ -5,9 +5,10 @@ const { ActivityTypes, CardFactory } = require('botbuilder');
 const { LuisRecognizer } = require('botbuilder-ai');
 const LUIS_CONFIGURATION = 'Starter_Key';
 const { ChoicePrompt, DialogSet, DialogTurnStatus } = require('botbuilder-dialogs');
-const { UserProfile } = require('./dialogs/greeting/UserProfile');
+const { UserProfile } = require('./dialogs/UserProfile');
 const { GreetingDialog } = require('./dialogs/greeting');
-const { RecipeSearchDialog } = require('./dialogs/recipeSearch')
+const { RecipeSearchDialog } = require('./dialogs/recipeSearch');
+const { HelpDialog } = require('./dialogs/help');
 //dialog cards
 const IntroCard = require('./resources/IntroCard.json')
 const WELCOMED_USER = 'welcomedUserProperty';
@@ -19,6 +20,7 @@ const USER_PROFILE_PROPERTY = 'userProfileProperty';
 // Greeting Dialog ID
 const GREETING_DIALOG = 'greetingDialog';
 const RECIPE_SEARCH_DIALOG = 'recipeSearch';
+const HELP_DIALOG = 'helpDialog'
 
 // Supported LUIS Intents.
 const SEARCH_RECIPE = 'Search_Recipe'
@@ -27,9 +29,6 @@ const CANCEL_INTENT = 'Cancel';
 const HELP_INTENT = 'Help';
 const NONE_INTENT = 'None';
 
-// Supported LUIS Entities, defined in ./dialogs/greeting/resources/greeting.lu
-const USER_NAME_ENTITIES = ['userName', 'userName_patternAny'];
-const USER_LOCATION_ENTITIES = ['userLocation', 'userLocation_patternAny'];
 
 class MyBot {
   /**
@@ -63,6 +62,7 @@ class MyBot {
     // Add the Greeting dialog to the set
     this.dialogs.add(new GreetingDialog(GREETING_DIALOG, this.userProfileAccessor));
     this.dialogs.add(new RecipeSearchDialog(RECIPE_SEARCH_DIALOG, this.userProfileAccessor));
+    this.dialogs.add(new HelpDialog(HELP_DIALOG, this.userProfileAccessor));
     // this.dialogs.add(new ChoicePrompt(RECIPE_SEACH_DIALOG))
 
     this.conversationState = conversationState;
@@ -117,9 +117,11 @@ class MyBot {
                   user.search = results.entities.keyPhrase;
                   await this.userProfileAccessor.set(turnContext, user);
                 }
+                console.log('SEARCH INTENT')
                 await dc.beginDialog(RECIPE_SEARCH_DIALOG);
                 break;
               case GREETING_INTENT:
+                console.log('GREETING intent')
                 await dc.beginDialog(GREETING_DIALOG);
                 break;
               case NONE_INTENT:
@@ -201,7 +203,7 @@ class MyBot {
 
     if (topIntent === HELP_INTENT) {
       await dc.context.sendActivity(`Let me try to provide some help.`);
-      await dc.context.sendActivity(`I understand greetings, being asked for help, or being asked to cancel what I am doing.`);
+      dc.beginDialog(HELP_DIALOG);
       return true; // this is an interruption
     }
     return false; // this is not an interruption
