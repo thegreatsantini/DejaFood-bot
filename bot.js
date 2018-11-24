@@ -111,17 +111,13 @@ class MyBot {
             switch (topIntent) {
               case SEARCH_RECIPE:
                 const user = await this.userProfileAccessor.get(turnContext);
-                if (!user) {
-                  await this.userProfileAccessor.set(turnContext, { search: results.entities.keyPhrase });
-                } else {
-                  user.search = results.entities.keyPhrase;
-                  await this.userProfileAccessor.set(turnContext, user);
-                }
-                console.log('SEARCH INTENT')
+                user.search = results.entities.keyPhrase;
+                await this.userProfileAccessor.set(turnContext, user);
+                console.log('**********SEARCH INTENT**************')
                 await dc.beginDialog(RECIPE_SEARCH_DIALOG);
                 break;
               case GREETING_INTENT:
-                console.log('GREETING intent')
+                console.log('*****************GREETING intent*************')
                 await dc.beginDialog(GREETING_DIALOG);
                 break;
               case NONE_INTENT:
