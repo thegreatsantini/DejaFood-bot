@@ -27,6 +27,7 @@ const SEARCH_RECIPE = 'Search_Recipe';
 const ADD_TO_SEARCH_INTENT = 'Add_To_Search';
 const REMOVE_FROM_SEARCH_INTENT = 'Remove_From_Search';
 const GREETING_INTENT = 'Greeting';
+const SET_NAME = 'Set_Name';
 const CANCEL_INTENT = 'Cancel';
 const HELP_INTENT = 'Help';
 const NONE_INTENT = 'None';
@@ -90,8 +91,9 @@ class MyBot {
 
       // Make sure I dont need this
       // dialogResult = await dc.continueDialog();
+      // add this in later as needed
+      await this.updateSearch(results, turnContext);
 
-      await this.updateUserProfile(results, turnContext);
       const interrupted = await this.isTurnInterrupted(dc, results);
       if (interrupted) {
         if (dc.activeDialog !== undefined) {
@@ -104,19 +106,27 @@ class MyBot {
       }
       // check intents in case search needs modifing 
       const user = await this.userProfileAccessor.get(turnContext);
-      let prevSearch = user.search;
-      switch (topIntent) {
-        case ADD_TO_SEARCH_INTENT:
-          // add items to previous search array and remove duplicates
-          user.search = prevSearch.concat(results.entities.keyPhrase).filter((item, i, arr) => arr.indexOf(i) !== item);
-          break;
-        case REMOVE_FROM_SEARCH_INTENT:
-          // remove items from previous search 
-          user.search = prevSearch.filter(item => !results.entities.keyPhrase.includes(item));
-          break;
+      console.log(topIntent)
+      if (topIntent === ADD_TO_SEARCH_INTENT || topIntent === REMOVE_FROM_SEARCH_INTENT) {
+        let prevSearch = user.search;
+        switch (topIntent) {
+          case ADD_TO_SEARCH_INTENT:
+            // add items to previous search array and remove duplicates
+            user.search = prevSearch.concat(results.entities.keyPhrase).filter((item, i, arr) => arr.indexOf(i) !== item);
+            break;
+          case REMOVE_FROM_SEARCH_INTENT:
+            // remove items from previous search  
+            user.search = prevSearch.filter(item => !results.entities.keyPhrase.includes(item));
+            break;
+          default:
+            // None or no intent identified, either way, let's provide some help
+            // to the user
+            await dc.context.sendActivity(`I didn't understand what you just said to me.`);
+            break;
+        }
+        // save changes to user
+        await this.userProfileAccessor.set(turnContext, user);
       }
-      // save changes to user
-      await this.userProfileAccessor.set(turnContext, user);
 
       // If no active dialog or no active dialog has responded,
       if (!dc.context.responded) {
@@ -140,6 +150,8 @@ class MyBot {
               case REMOVE_FROM_SEARCH_INTENT:
                 await dc.beginDialog(RECIPE_SEARCH_DIALOG);
                 break;
+              // case SET_NAME:
+              //   await  dc.context.sendActivity(`we just updated your name`);
               case NONE_INTENT:
               default:
                 // None or no intent identified, either way, let's provide some help
@@ -230,19 +242,21 @@ class MyBot {
      * @param {LuisResults} luisResults - LUIS recognizer results
      * @param {DialogContext} dc - dialog context
      */
-  async updateUserProfile(luisResult, context) {
+  async updateSearch(luisResult, context) {
     // Do we have any entities?
-    console.log("------------------------->UPDATE PROFILE")
-    if (Object.keys(luisResult.entities).length !== 1) {
+    const userProfile = this.userProfileAccessor.get(context);
+    if (userProfile !== undefined) {
+
       // get userProfile object using the accessor
-      let userProfile = await this.userProfileAccessor.get(context);
+      userProfile.search = luisResult.entities.search
+      console.log(userProfile)
       if (userProfile === undefined) {
         userProfile = new UserProfile();
       }
       // see if we have any user name entities
-      if (luisResult.entities.personName !== undefined) {
-        userProfile.name = luisResult.entities.personName[0]
-      }
+      // if (luisResult.entities.personName !== undefined) {
+      //   userProfile.name = luisResult.entities.personName[0]
+      // }
       // set the new values
       await this.userProfileAccessor.set(context, userProfile);
     }
