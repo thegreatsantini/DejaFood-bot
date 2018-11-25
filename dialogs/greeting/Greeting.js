@@ -167,7 +167,6 @@ class Greeting extends ComponentDialog {
     async greetUser(step) {
         // Display to the user their profile information and end dialog
         const userProfile = await this.userProfileAccessor.get(step.context);
-        await step.context.sendActivity(`Hi ${userProfile.name}, this is from greeting`);
         await step.context.sendActivity(`You can always say 'My name is <your name> to reintroduce yourself to me.`);
         return await step.endDialog();
     }
