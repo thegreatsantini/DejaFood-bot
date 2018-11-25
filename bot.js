@@ -88,7 +88,7 @@ class MyBot {
 
       const results = await this.luisRecognizer.recognize(turnContext);
       const topIntent = LuisRecognizer.topIntent(results)
-
+console.log('topIntent: ', topIntent)
       // Make sure I dont need this
       // dialogResult = await dc.continueDialog();
       // add this in later as needed
@@ -106,7 +106,7 @@ class MyBot {
       }
       // check intents in case search needs modifing 
       const user = await this.userProfileAccessor.get(turnContext);
-      console.log(topIntent)
+      console.log(user)
       if (topIntent === ADD_TO_SEARCH_INTENT || topIntent === REMOVE_FROM_SEARCH_INTENT) {
         let prevSearch = user.search;
         switch (topIntent) {
@@ -244,22 +244,21 @@ class MyBot {
      */
   async updateSearch(luisResult, context) {
     // Do we have any entities?
-    const userProfile = this.userProfileAccessor.get(context);
-    if (userProfile !== undefined) {
-
+    let userProfile = await this.userProfileAccessor.get(context);
+    if (userProfile === undefined) {
+      userProfile = new UserProfile();
+    }
+    if (userProfile.name !== undefined) {
       // get userProfile object using the accessor
+      console.log(luisResult.entities.search)
       userProfile.search = luisResult.entities.search
-      console.log(userProfile)
-      if (userProfile === undefined) {
-        userProfile = new UserProfile();
-      }
       // see if we have any user name entities
       // if (luisResult.entities.personName !== undefined) {
       //   userProfile.name = luisResult.entities.personName[0]
       // }
       // set the new values
-      await this.userProfileAccessor.set(context, userProfile);
     }
+    await this.userProfileAccessor.set(context, userProfile);
   }
 }
 
