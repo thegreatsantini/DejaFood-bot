@@ -70,6 +70,7 @@ class Greeting extends ComponentDialog {
      * @param {WaterfallStepContext} step contextual information for the current step being executed
      */
     async initializeStateStep(step) {
+        console.log('BEGIN WATERFALL')
         let userProfile = await this.userProfileAccessor.get(step.context);
         if (userProfile === undefined) {
             if (step.options && step.options.userProfile) {
@@ -114,7 +115,7 @@ class Greeting extends ComponentDialog {
         const userProfile = await this.userProfileAccessor.get(step.context);
 
         // if the user gave their name
-        if (step.result) {
+        if (userProfile.name === undefined && step.result) {
             let lowerCaseName = step.result;
             // capitalize and set name
             userProfile.name = lowerCaseName.charAt(0).toUpperCase() + lowerCaseName.substr(1);
@@ -165,6 +166,8 @@ class Greeting extends ComponentDialog {
      */
     async greetUser(step) {
         // Display to the user their profile information and end dialog
+        const userProfile = await this.userProfileAccessor.get(step.context);
+        await step.context.sendActivity(`Hi ${userProfile.name}, this is from greeting`);
         await step.context.sendActivity(`You can always say 'My name is <your name> to reintroduce yourself to me.`);
         return await step.endDialog();
     }
