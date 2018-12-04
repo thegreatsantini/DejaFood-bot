@@ -89,13 +89,13 @@ class RecipeSearch extends ComponentDialog {
             // search for recipes
             const query = userProfile.search.join(',').replace(/\s/g, ',');
             // query api and render three recipes
-            // const data = await searchRecipes(query)
-            // for (let i = 0; i < 3; i++) {
-            //     step.context.sendActivity({
-            //         attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
-            //     });
-            // }
-            step.context.sendActivity(`I just queried the api with ${userProfile.search}`);
+            const data = await searchRecipes(query)
+            for (let i = 0; i < 3; i++) {
+                step.context.sendActivity({
+                    attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
+                });
+            }
+//             step.context.sendActivity(`I just queried the api with ${userProfile.search}`);
             return await step.endDialog();
         }
         if (!userProfile.name) {
@@ -125,13 +125,13 @@ class RecipeSearch extends ComponentDialog {
             // const query = userProfile.search.join(',').replace(/\b(and|or)\b/gi, '');
             const query = userProfile.search.join(',').replace(/\s/g, ',');
             // query api and render three recipes
-            // const data = await searchRecipes(query)
-            // for (let i = 0; i < 3; i++) {
-            //     step.context.sendActivity({
-            //         attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
-            //     });
-            // }
-            step.context.sendActivity(`I just queried the api with ${userProfile.search}`);
+            const data = await searchRecipes(query)
+            for (let i = 0; i < 3; i++) {
+                step.context.sendActivity({
+                    attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
+                });
+            }
+//             step.context.sendActivity(`I just queried the api with ${userProfile.search}`);
             return await step.endDialog();
         }
         return await this.greetUser(step);
