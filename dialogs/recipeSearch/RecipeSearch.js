@@ -8,7 +8,10 @@ const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dia
 
 // User state for greeting dialog
 const { UserProfile } = require('../UserProfile');
-
+const request = require('request')
+const { CardFactory } = require('botbuilder')
+// User state for greeting dialog
+const { RecipeCard } = require('../RecipeCard')
 const { searchRecipes } = require('../../recipeAPI')
 
 const NAME_LENGTH_MIN = 3;
