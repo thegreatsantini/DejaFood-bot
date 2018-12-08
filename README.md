@@ -85,7 +85,7 @@ Search_Recipe intent will initiate another waterfall dialog that will also check
 
 Whenever a recipe is searched, the bot will respond with three recipes in separate ActivityCards from the CardFactory in the botBuilder API. It will display information from each recipe and allow the user to click a link to view the source and a button to save the recipes (this is to be added later).
 
-One of the main things that humans do better than bots is understand context. I created two intents to provide a pseudo understanding of context. MODIFY_SEARCH and ADD_TO_SEARCH for example if after a user searches a recipe and they say a phrase like "I ran out bacon" or "what about cheddar cheese" the bot will take the previous search and either add or remove items based off the new intent, add or remove. 
+One of the main things that humans do better than bots is understand context. I created two intents to provide a pseudo understanding of context. MODIFY_SEARCH and ADD_TO_SEARCH for example if after a user searches a recipe and they say a phrase like "I ran out bacon" or "what about cheddar cheese" the bot will take the previous search and either add or remove items based off the new intent, add or remove. These intents have a check to make sure that the user has a previous search, if not the user will be directed to search a recipe first (this also needs to be improved). Implementing this took extra time because the LUIS recognition kept clashing with SEARCH_RECIPE. I had to create various phrase lists to help the bot discern the various different but similar intents.
 
   
 
@@ -93,7 +93,7 @@ One of the main things that humans do better than bots is understand context. I 
 
   
 
-Before attending the Boot camp at General Assembly, I was teaching myself to code with zero experience I learn JavaScript, React, Node and HTML/CSS. Teaching these by myself technologies took a lot of Googling and troubleshooting without any assistance. I attended the Boot camp to experince an intensive learning environment and improve my portfolio. The Boot camp was challenging and forced me again to be able to learn on the fly and I again improved my troubleshooting abilities. I have a mental checklist that I go through when encountering problems, the checklist isn't set in stone. But I will always follow the data to make sure its coming in as expected, I will copy and paste the message to Google and I will hard code variables or inputs to make sure that there isn't a problem with the implementation.
+Before attending the Boot camp at General Assembly, I was teaching myself to code with zero experience I learn JavaScript, React, Node and HTML/CSS. Learning these technologies alone took a lot of Googling and troubleshooting without any assistance. I attended the Boot camp to experience an intensive learning environment and improve my portfolio. The Boot camp was challenging and forced me again to be able to learn on the fly and I again improved my troubleshooting abilities. I have a mental checklist that I go through when encountering problems, the checklist isn't set in stone. But I will always follow the data to make sure its coming in as expected, I will Google error messages or just "How do I ...". I will hard code variables or inputs to make sure that there isn't a problem with the implementation and later abstract the functionality once it is working as expected. 
 
   
 ## experience helping others
@@ -118,6 +118,8 @@ Because I had previous experience with JavaScript, React and Node when I began t
 6) Deploy.
 
 7) Tweak Prompts.
+
+8) Learn more about LUIS to improve intent recognition. 
 
   
 
