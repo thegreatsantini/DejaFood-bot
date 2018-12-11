@@ -1,1 +1,0 @@
-az bot publish --resource-group DejaFood -n DejaFood --subscription 0bdb70dd-0d67-4798-b9d5-98cbf5819b05 -v v4 --verbose --code-dir "." 
