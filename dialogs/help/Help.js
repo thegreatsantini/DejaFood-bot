@@ -123,7 +123,7 @@ class Help extends ComponentDialog {
             let lowerCaseName = step.result;
             // capitalize and set name
             userProfile.name = lowerCaseName.charAt(0).toUpperCase() + lowerCaseName.substr(1);
-            // await this.userProfileAccessor.set(step.context, userProfile);
+            await this.userProfileAccessor.set(step.context, userProfile);
         }
         // if there is a name 
         if (userProfile.name) {
@@ -146,12 +146,12 @@ class Help extends ComponentDialog {
         
         if (step.result) {
             await step.context.sendActivity(`I just queried ${step.result}`);
-            // const data = await searchRecipes(step.result);
-            // for (let i = 0; i < 3; i++) {
-            //     step.context.sendActivity({
-            //         attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
-            //     });
-            // }
+            const data = await searchRecipes(step.result);
+            for (let i = 0; i < 3; i++) {
+                step.context.sendActivity({
+                    attachments: [CardFactory.adaptiveCard(data[i].renderCard())]
+                });
+            }
         }
         return await step.next()
     }
