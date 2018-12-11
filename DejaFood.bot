@@ -1,0 +1,57 @@
+{
+    "name": "DejaFood",
+    "description": "",
+    "services": [
+        {
+            "type": "abs",
+            "id": "3",
+            "name": "DejaFood",
+            "tenantId": "dc046083-4ce8-437a-bd49-e995b65e4d11",
+            "subscriptionId": "0bdb70dd-0d67-4798-b9d5-98cbf5819b05",
+            "resourceGroup": "DejaFood",
+            "serviceName": "DejaFood",
+            "appId": "e61907cc-8f56-4643-8165-ae1bdc80c9c5"
+        },
+        {
+            "type": "endpoint",
+            "id": "1",
+            "name": "development",
+            "appId": "e61907cc-8f56-4643-8165-ae1bdc80c9c5",
+            "appPassword": "N/4vEXRuX0zCBRPsNsgslQ==!Piqx66tcZs4XGgRbx+Nl/bkVVDmm1co9jd8Yp8jczUw=",
+            "endpoint": "http://localhost:3978/api/messages"
+        },
+        {
+            "type": "endpoint",
+            "id": "2",
+            "name": "production",
+            "appId": "e61907cc-8f56-4643-8165-ae1bdc80c9c5",
+            "appPassword": "eLrDMssICCpJCTSwt7FMKg==!1i5xsJKz1QOpulqL59zKihpEtCREc5niRVj9AaXkenI=",
+            "endpoint": "https://ejaoodvpw3.azurewebsites.net/api/messages"
+        },
+        {
+            "type": "appInsights",
+            "tenantId": "dc046083-4ce8-437a-bd49-e995b65e4d11",
+            "subscriptionId": "0bdb70dd-0d67-4798-b9d5-98cbf5819b05",
+            "resourceGroup": "DejaFood",
+            "name": "DejaFood24mf3a",
+            "serviceName": "DejaFood24mf3a",
+            "instrumentationKey": "uKGIHqYWf0TkACQvcQmbBw==!2Fmaqe8rm63Yd0Nwa6pXGqK+RgxeZG7aW8mxBstFfrxsuxbWSKDWgb2Yk4bKiovF",
+            "applicationId": "9d1416aa-2176-440d-ab81-524f8908eea8",
+            "apiKeys": {},
+            "id": "4"
+        },
+        {
+            "type": "blob",
+            "id": "5",
+            "name": "ejaoodtxxm",
+            "serviceName": "ejaoodtxxm",
+            "tenantId": "dc046083-4ce8-437a-bd49-e995b65e4d11",
+            "subscriptionId": "0bdb70dd-0d67-4798-b9d5-98cbf5819b05",
+            "resourceGroup": "DejaFood",
+            "connectionString": "i7X08IiBiTqCaT433U1OPw==!0y6hxQWG+mBCIA3KjEpkI9SFcID5jGItWjeA4cuObrfTJlpUcD4NYKXU+G+uzXmg6WoYg9n6nTp30l6FIYEyEWpi4djiGHiPDCyDufwuCAb3KsxAZitOUjPICnNLr59ZAGZ6tGQlatZPupSNH/MDYEdS2p9S4wDsoZHgUPfisgx2z+r7XHjtyOC5ta1IVZ9rF2h9dlrO+CMehtZ9iyoelKfrtDWTgHvad4sEerZFyhLyCyyfcBGkGjxMLI6P/HzF",
+            "container": "botstatestore"
+        }
+    ],
+    "padlock": "7JqHi+hthTxNiqQ2ujSQ8g==!QXIlCyoz1rM0R37jarLLEXmq6dB3mR+do6iafPSNBSxpmknS0KLiXHXD/h0kCNve",
+    "version": "2.0"
+}
